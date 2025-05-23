@@ -18,6 +18,9 @@ public class ff {
     public boolean isBackpropagated(){
         return _backpropagated;
     }
+    public float[] infer(float input){
+        return infer(new float[]{input});
+    }
     public float[] infer(float[] input){
         _inferenced = true;
         for (int x = 0; x < num_layers; x++){
