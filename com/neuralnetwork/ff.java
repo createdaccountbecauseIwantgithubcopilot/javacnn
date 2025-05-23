@@ -1,60 +1,53 @@
 package com.neuralnetwork;
-public class ff{
-    public float[] weights;
-    public float[] bias;
-    public float[] gradients;
-    public float[] bias_grads;
-    public float[] activations; //despite what the name says, store preactivation vals
-    public float[] last_inputs;
-    public int input_size;
-    public int output_size;
-    public activation act;
-    public void init(){
-        for (int x = 0; x < input_size * output_size; x++){
-            weights[x] = (float)Math.random();
+
+public class ff { 
+    public linearlayer[] layers;
+    public int num_layers;
+    private boolean _inferenced = false;
+    private boolean _backpropagated = false;
+    ff(layers_def layers){
+        this.layers = layers.create_layers();
+        num_layers = this.layers.length;
+    }
+    public boolean isInferenced() {
+        return _inferenced;
+    } 
+    public boolean isBackpropagated(){
+        return _backpropagated;
+    }
+    public float[] infer(float[] input){
+        _inferenced = true;
+        for (int x = 0; x < num_layers; x++){
+            input = layers[x].infer(input);
         }
-        for (int x = 0; x < output_size; x++){
-            bias[x] = (float)Math.random();
+        return input;
+    }
+    public void backPropagate(float dLoss){
+        backPropagate(new float[]{dLoss});
+    }
+    public void backPropagate(float[] dLoss){
+        if (!_inferenced){
+            throw new IllegalCallerException("Have not performed inference yet! Do so before backpropagating");
+        }
+        _backpropagated = true;
+        for (int x = num_layers-1; x>=0; x--){
+            dLoss = layers[x].propagate(dLoss);
         }
     }
-    ff(int input_size, int output_size, activation act){
-        this.act = act;
-        this.input_size = input_size;
-        this.output_size = output_size;
-        weights = new float[input_size * output_size];
-        bias = new float[output_size];
-        gradients = new float[input_size * output_size];
-        bias_grads = new float[output_size];
-        activations = new float[output_size];
-    }
-    public float[] input(float[] inputs){
-        float[] outputs = new float[output_size];
-        last_inputs = inputs;
-        for (int x = 0; x < output_size; x++){
-            for (int y = 0; y < input_size; y++){
-                outputs[x] += weights[x * input_size + y] * inputs[y];
-            }
-            outputs[x] += bias[x];
-            activations[x] = outputs[x];
-            outputs[x] = act.activate(outputs[x]);
+    public void fit(float lr){
+        if (!_backpropagated){
+            throw new IllegalCallerException("Have not performed back propagation yet! Do so before backpropagating");
         }
-        return outputs;
-    }
-    public float[] propagate(float[] errors){
-        return propagate(errors, false);
-    }
-    public float[] propagate_last_layer(float[] errors){
-        return propagate(errors, true);
-    }
-    private float[] propagate(float[] errors, boolean output){ // represents the errors after activation
-        float[] next_errors = new float[input_size];
-        for (int x = 0; x < output_size; x++){
-            float act_err = errors[x] * act.differentiate(activations[x]);
-            bias_grads[x] += act_err;
-            for (int y = 0; y < input_size; y++){
-                gradients[x * input_size + y] += errors[x] * act.differentiate(activations[x]) * weights[x * input_size + y];
-            }
+        for (int x = 0; x < num_layers; x++){
+            layers[x].fit(lr);
         }
-        return next_errors;
+    }
+    public void fit(){
+        if (!_backpropagated){
+            throw new IllegalCallerException("Have not performed back propagation yet! Do so before backpropagating");
+        }
+        for (int x = 0; x < num_layers; x++){
+            layers[x].fit();
+        }
     }
 }
