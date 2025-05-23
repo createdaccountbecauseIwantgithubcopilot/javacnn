@@ -1,8 +1,8 @@
 package com.neuralnetwork;
 class main{
     public static void main(String[] args) { 
-        int[] network_size = new int[]{1, 10, 10, 1};
-        activation[] acts = new activation[]{new relu(), new relu(), new relu(), new relu()};
+        int[] network_size = new int[]{1, 100, 100, 1};
+        activation[] acts = new activation[]{new relu(), new relu(), new activation()};
         layers_def layer = new layers_def(network_size, acts);
         ff model = new ff(layer);
         System.out.printf("Initial output: %f \n", model.infer(1)[0]);

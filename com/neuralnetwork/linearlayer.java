@@ -10,7 +10,7 @@ public class linearlayer{
     public final int output_size;
     public activation act;
     public void init(){
-        double L = Math.sqrt(6/input_size);
+        double L = Math.sqrt(6.0/input_size);
         for (int x = 0; x < input_size * output_size; x++){
             weights[x] = (float)(Math.random() * 2 * L - L);
         }
