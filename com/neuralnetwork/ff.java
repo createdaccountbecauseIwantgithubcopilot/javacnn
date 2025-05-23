@@ -8,6 +8,9 @@ public class ff {
     ff(layers_def layers){
         this.layers = layers.create_layers();
         num_layers = this.layers.length;
+        for (int x = 0; x < num_layers; x++){
+            this.layers[x].init();
+        }
     }
     public boolean isInferenced() {
         return _inferenced;
