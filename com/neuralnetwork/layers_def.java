@@ -3,14 +3,10 @@ package com.neuralnetwork;
 public class layers_def{
     public layer_def[] layers;
     public int length;
-    layers_def(int[] inputs, int[] outputs, activation[] acts){
-        if (!((inputs.length == outputs.length) && (outputs.length == acts.length))){
-            throw new IllegalArgumentException("Layers definition lengths don't match!!! ");
-        }
-        layers = new layer_def[inputs.length];
-        length = inputs.length;
-        for (int x = 0; x < inputs.length; x++){
-            layers[x] = new layer_def(inputs[x], outputs[x], acts[x]);
+    layers_def(int[] layer_sizes, activation[] acts){
+        layers = new layer_def[layer_sizes.length-1];
+        for (int x = 1; x < layer_sizes.length-1; x++){
+            layers[x] = new layer_def(layer_sizes[x-1], layer_sizes[x], acts[x-1]);
         }
     }
     layers_def(layer_def[] layers){
