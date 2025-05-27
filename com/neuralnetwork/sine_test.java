@@ -16,7 +16,7 @@ class sine_test{
         }
         
         System.out.println("Starting training on sine wave data");
-        int num_epochs = 1000;
+        int num_epochs = 10000;
         mse loss = new mse();
         float lr = 0.001f;
         int num_batches = 4;
