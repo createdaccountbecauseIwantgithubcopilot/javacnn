@@ -22,7 +22,7 @@ public class linearlayer{
     public float bias_grad_norm_clip = 1.0f;
     public float weight_clip_val = 1.0f;
     public float bias_clip_val = 1.0f;
-    clip_types clip_type;
+    clip_types clip_type = clip_types.CLIP_NORM;
     public void init(){
         double L;
         if (act instanceof relu){
