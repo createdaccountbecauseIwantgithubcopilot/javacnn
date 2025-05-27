@@ -14,7 +14,7 @@ public class convolution {
     public final float[] bias;
     private final float[][][][] filter_grads;
     private final float[] bias_grads;
-    private float[][][] activation_grads; // [height][width][channels]
+    private float[][][][] activation_grads; // [batch][height][width][channels]
     private float[][][][] last_inputs; // Store for backprop
     public final int num_filters;
     public final int input_channels;
@@ -73,21 +73,24 @@ public class convolution {
         return (input_dim + 2 * padding - filter_dim) / stride + 1;
     }
     
-    public grads get_grads() {
-        // Flatten filter gradients for compatibility with grads class
-        int total_filter_params = num_filters * input_channels * filter_height * filter_width;
-        float[] flattened_filter_grads = new float[total_filter_params];
+    public float[] flatten(float[][][][] a){ //added mostly to simplify code and to allow use with loss functions
+        float[] flattened = new float[a.length * a[0].length * a[0][0].length * a[0][0][0].length];
         int idx = 0;
-        for (int f = 0; f < num_filters; f++) {
-            for (int c = 0; c < input_channels; c++) {
-                for (int h = 0; h < filter_height; h++) {
-                    for (int w = 0; w < filter_width; w++) {
-                        flattened_filter_grads[idx++] = filter_grads[f][c][h][w];
+        for (int b = 0; b < a.length; b++){
+            for (int oh = 0; oh < a[0].length; oh++){
+                for (int ow = 0; ow < a[0][0].length; ow++){
+                    for (int f = 0; f < a[0][0][0].length; f++){
+                        flattened[idx++] = a[b][oh][ow][f];
                     }
                 }
             }
         }
-        return new grads(flattened_filter_grads, this.bias_grads);
+        return flattened;
+    }
+
+    public grads get_grads() {
+        // Flatten filter gradients for compatibility with grads class
+        return new grads(flatten(filter_grads), this.bias_grads);
     }
     
     // Input shape: [batch][height][width][channels]
@@ -101,7 +104,7 @@ public class convolution {
         output_width = calculate_output_dimension(input_width, filter_width);
         
         float[][][][] outputs = new float[batch_size][output_height][output_width][num_filters];
-        activation_grads = new float[output_height][output_width][num_filters];
+        activation_grads = new float[batch_size][output_height][output_width][num_filters];
         last_inputs = inputs;
         
         // Perform convolution
@@ -126,7 +129,7 @@ public class convolution {
                         }
                         
                         sum += bias[f];
-                        activation_grads[oh][ow][f] = act.differentiate(sum);
+                        activation_grads[b][oh][ow][f] = act.differentiate(sum);
                         outputs[b][oh][ow][f] = act.activate(sum);
                     }
                 }
@@ -144,7 +147,7 @@ public class convolution {
             for (int h = 0; h < output_height; h++) {
                 for (int w = 0; w < output_width; w++) {
                     for (int f = 0; f < num_filters; f++) {
-                        errors[b][h][w][f] *= activation_grads[h][w][f];
+                        errors[b][h][w][f] *= activation_grads[b][h][w][f];
                     }
                 }
             }
