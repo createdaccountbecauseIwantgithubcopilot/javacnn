@@ -121,9 +121,11 @@ public class linearlayer{
         }
         for (int x = 0; x < weights.length; x++){
             weights[x] -= lr * weight_grads[x];
+            weight_grads[x] = 0;
         }
         for (int x = 0; x < output_size; x++){
             bias[x] -= lr * bias_grads[x];
+            bias_grads[x] = 0;
         }
     }
 }

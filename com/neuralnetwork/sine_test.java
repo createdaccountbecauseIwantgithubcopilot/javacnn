@@ -19,6 +19,7 @@ class sine_test{
         int num_epochs = 1000;
         mse loss = new mse();
         float lr = 0.001f;
+        int num_batches = 4;
         
         for (int epoch = 0; epoch < num_epochs; epoch++){
             float total_loss = 0;
@@ -27,7 +28,7 @@ class sine_test{
                 float[] target = new float[]{y_train[i]};
                 total_loss += loss.compute_loss(training_output, target);
                 model.backPropagate(loss.differentiate(training_output, target));
-                model.fit(lr);
+                if (i % num_batches == 0) model.fit(lr);
             }
             if (epoch % 100 == 0){
                 System.out.printf("Epoch %d, Average Loss: %f\n", epoch, total_loss/num_samples);
