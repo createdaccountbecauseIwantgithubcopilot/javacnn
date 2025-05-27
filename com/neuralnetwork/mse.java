@@ -5,12 +5,12 @@ public class mse extends loss{
         for (int x = 0; x < predict.length; x++){
             sum += (float)(Math.pow(predict[x] - ans[x], 2));
         }
-        return sum;
+        return sum / predict.length;
     }
     public float[] differentiate(float[] predict, float[] ans){
         float[] diff = new float[predict.length];
         for (int x = 0; x < predict.length; x++){
-            diff[x] = (predict[x] - ans[x]);
+            diff[x] = 2.0f * (predict[x] - ans[x]) / predict.length;
         }
         return diff;
     }

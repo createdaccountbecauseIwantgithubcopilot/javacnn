@@ -1,4 +1,13 @@
 package com.neuralnetwork;
+
+import java.util.Random;
+
+enum clip_types{
+    CLIP_VAL,
+    CLIP_NORM,
+    NO_CLIP
+}
+
 public class linearlayer{
     public final float[] weights;
     public final float[] bias;
@@ -9,10 +18,21 @@ public class linearlayer{
     public final int input_size;
     public final int output_size;
     public activation act;
+    public float weight_grad_norm_clip = 1.0f;
+    public float bias_grad_norm_clip = 1.0f;
+    public float weight_clip_val = 1.0f;
+    public float bias_clip_val = 1.0f;
+    clip_types clip_type;
     public void init(){
-        double L = Math.sqrt(6.0/input_size);
+        double L;
+        if (act instanceof relu){
+            L = Math.sqrt(2.0 / input_size);
+        }else{
+            L = Math.sqrt(1.0 / input_size);
+        }
+        Random rand = new Random();
         for (int x = 0; x < input_size * output_size; x++){
-            weights[x] = (float)(Math.random() * 2 * L - L);
+            weights[x] = (float)(rand.nextGaussian() * L);
         }
     }
     linearlayer(int input_size, int output_size, activation act){
@@ -59,7 +79,46 @@ public class linearlayer{
     public void fit(){
         fit(0.01f);
     }
+    private void clip_norm(){
+        float curr_weight_grad_norm = 0; //l2 norm of these
+        float curr_bias_grad_norm = 0;
+        for (int x = 0; x < weight_grads.length; x++){
+            curr_weight_grad_norm += (float)Math.pow(weight_grads[x], 2);
+        }
+        for (int x = 0; x < bias_grads.length; x++){
+            curr_bias_grad_norm += (float)Math.pow(bias_grads[x], 2);
+        }
+        curr_weight_grad_norm = (float)Math.sqrt(curr_weight_grad_norm);
+        curr_bias_grad_norm = (float)Math.sqrt(curr_bias_grad_norm);
+        if (curr_weight_grad_norm > weight_grad_norm_clip){
+            float scale_value = weight_grad_norm_clip / curr_weight_grad_norm;
+            for (int x = 0; x < weight_grads.length; x++){
+                weight_grads[x] *= scale_value;
+            }
+        }
+        if (curr_bias_grad_norm > bias_grad_norm_clip){
+            float scale_value = bias_grad_norm_clip / curr_bias_grad_norm;
+            for (int x = 0; x < bias_grads.length; x++){
+                bias_grads[x] *= scale_value;
+            }
+        }
+    }
+    private void clip_val(){
+        for (int x = 0; x < weight_grads.length; x++){
+            if (weight_grads[x] > weight_clip_val) weight_grads[x] = weight_clip_val;
+            if (weight_grads[x] < -weight_clip_val) weight_grads[x] = -weight_clip_val;
+            if (x % input_size == 0){
+                if (bias_grads[x] > bias_clip_val) weight_grads[x] = bias_clip_val;
+                if (bias_grads[x] < -bias_clip_val) weight_grads[x] = -bias_clip_val;
+            }
+        }
+    }
     public void fit(float lr){
+        if (clip_type == clip_types.CLIP_NORM){
+            clip_norm();
+        }else if(clip_type == clip_types.CLIP_VAL){
+            clip_val();
+        }
         for (int x = 0; x < weights.length; x++){
             weights[x] -= lr * weight_grads[x];
         }

@@ -5,12 +5,12 @@ public class loss {
         for (int x = 0; x < predict.length; x++){
             sum += Math.abs(predict[x] - ans[x]);
         }
-        return sum;
+        return sum / predict.length;
     }
     public float[] differentiate(float[] predict, float[] ans){
         float[] sum = new float[predict.length];
         for (int x = 0; x < predict.length; x++){
-            sum[x] = 1;
+            sum[x] = 1 / predict.length;
         }
         return sum;
     }
