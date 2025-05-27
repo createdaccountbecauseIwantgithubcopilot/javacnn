@@ -73,6 +73,22 @@ public class convolution {
         return (input_dim + 2 * padding - filter_dim) / stride + 1;
     }
     
+    public float[][][][] fold(float[] a) { //added for propagation of error after loss calculation
+        int batch_size = a.length / (output_height * output_width * num_filters);
+        float[][][][] folded = new float[batch_size][output_height][output_width][num_filters];
+        int idx = 0;
+        for (int b = 0; b < batch_size; b++) {
+            for (int oh = 0; oh < output_height; oh++) {
+                for (int ow = 0; ow < output_width; ow++) {
+                    for (int f = 0; f < num_filters; f++) {
+                        folded[b][oh][ow][f] = a[idx++];
+                    }
+                }
+            }
+        }
+        return folded;
+    }
+
     public float[] flatten(float[][][][] a){ //added mostly to simplify code and to allow use with loss functions
         float[] flattened = new float[a.length * a[0].length * a[0][0].length * a[0][0][0].length];
         int idx = 0;
