@@ -7,6 +7,10 @@ public class convolution {
     private final float[] bias;
     private final float[][][][] filter_grads;
     private final float[] bias_grads;
+    private final float[][][][] first_momentum_filter_grads;
+    private final float[] first_momentum_bias_grads;
+    private final float[][][][] second_momentum_filter_grads;
+    private final float[] second_momentum_bias_grads;
     private float[][][] activation_grads;
     private float[][][] last_inputs;
     public final int num_filters;
@@ -26,6 +30,11 @@ public class convolution {
     public final float bias_grad_norm_clip = 1.0f;
     public final float filter_clip_val = 1.0f;
     public final float bias_clip_val = 1.0f;
+    public boolean use_Adam = true;
+    public float adamFirstMomentumDecay = 0.9f;
+    public float adamSecondMomentumDecay = 0.99f;
+    public float epsilon = 1e-8f;
+    private int adam_t_step = 0;
 
     public void init(){
         double L;
@@ -56,6 +65,10 @@ public class convolution {
         this.padding = padding;
         this.act = act;
         filters = new float[num_filters][num_channels_in][kernel_size_h][kernel_size_w];
+        first_momentum_filter_grads = new float[num_filters][num_channels_in][kernel_size_h][kernel_size_w];
+        first_momentum_bias_grads = new float[num_filters];
+        second_momentum_filter_grads = new float[num_filters][num_channels_in][kernel_size_h][kernel_size_w];
+        second_momentum_bias_grads = new float[num_filters];
         filter_grads = new float[num_filters][num_channels_in][kernel_size_h][kernel_size_w];
         activation_grads = null;
         bias = new float[num_filters];
@@ -179,6 +192,9 @@ public class convolution {
     }
 
     public void fit(float lr){
+        if (use_Adam){
+            adam_t_step++;
+        }
         if (clip_type == clip_types.CLIP_NORM){
             clip_norm();
         } else if (clip_type == clip_types.CLIP_VAL){
@@ -191,12 +207,30 @@ public class convolution {
             for (int c = 0; c < this.num_channels_in; c++){
                 for (int kh = 0; kh < kernel_size_h; kh++){
                     for (int kw = 0; kw < kernel_size_w; kw++){
-                        filters[f][c][kh][kw] -= lr * filter_grads[f][c][kh][kw] / batch_counter;
+                        filter_grads[f][c][kh][kw] /= batch_counter;
+                        if (use_Adam == true){
+                            first_momentum_filter_grads[f][c][kh][kw] = (first_momentum_filter_grads[f][c][kh][kw] * adamFirstMomentumDecay) + ((1.0f - adamFirstMomentumDecay) * filter_grads[f][c][kh][kw]);
+                            second_momentum_filter_grads[f][c][kh][kw] = (second_momentum_filter_grads[f][c][kh][kw] * adamSecondMomentumDecay) + ((1.0f - adamSecondMomentumDecay) * (float)Math.pow(filter_grads[f][c][kh][kw], 2.0));
+                            float m_f_hat = first_momentum_filter_grads[f][c][kh][kw] / (1.0f - (float)Math.pow(adamFirstMomentumDecay, adam_t_step));
+                            float v_f_hat = second_momentum_filter_grads[f][c][kh][kw] / (1.0f - (float)Math.pow(adamSecondMomentumDecay, adam_t_step));
+                            filters[f][c][kh][kw] -= lr * m_f_hat / ((float)Math.sqrt(v_f_hat) + epsilon);
+                        } else{
+                            filters[f][c][kh][kw] -= lr * filter_grads[f][c][kh][kw];
+                        }
                         filter_grads[f][c][kh][kw] = 0;
                     }
                 }
             }
-            bias[f] -= lr * bias_grads[f] / batch_counter;
+            bias_grads[f] /= batch_counter;
+            if (use_Adam == true){
+                first_momentum_bias_grads[f] = (first_momentum_bias_grads[f] * adamFirstMomentumDecay) + ((1.0f - adamFirstMomentumDecay) * bias_grads[f]);
+                second_momentum_bias_grads[f] = (second_momentum_bias_grads[f] * adamSecondMomentumDecay) + ((1.0f - adamSecondMomentumDecay) * (float)Math.pow(bias_grads[f], 2.0));
+                float m_b_hat = first_momentum_bias_grads[f] / (1.0f - (float)Math.pow(adamFirstMomentumDecay, adam_t_step));
+                float v_b_hat = second_momentum_bias_grads[f] / (1.0f - (float)Math.pow(adamSecondMomentumDecay, adam_t_step));
+                bias[f] -= lr * m_b_hat / ((float)Math.sqrt(v_b_hat) + epsilon);
+            }else{
+                bias[f] -= lr * bias_grads[f];
+            }
             bias_grads[f] = 0;
         }
         batch_counter = 0;

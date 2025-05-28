@@ -7,6 +7,10 @@ public class linearlayer{
     public final float[] bias;
     private final float[] weight_grads;
     private final float[] bias_grads;
+    private final float[] first_momentum_weight_grads;
+    private final float[] first_momentum_bias_grads;
+    private final float[] second_momentum_weight_grads;
+    private final float[] second_momentum_bias_grads;
     private final float[] activation_grads; //despite what the name says, store preactivation vals
     public final float weight_grad_norm_clip = 1.0f;
     public final float bias_grad_norm_clip = 1.0f;
@@ -18,6 +22,11 @@ public class linearlayer{
     private float[] last_inputs;
     public activation act;
     public clip_types clip_type = clip_types.CLIP_NORM;
+    public boolean useAdam = true;
+    public float adamFirstMomentumDecay = 0.9f;
+    public float adamSecondMomentumDecay = 0.99f;
+    public float epsilon = 1e-8f;
+    private int adam_t_step = 0;
     public void init(){
         double L;
         if (act instanceof relu){
@@ -35,6 +44,10 @@ public class linearlayer{
         this.act = act;
         this.input_size = input_size;
         this.output_size = output_size;
+        first_momentum_weight_grads = new float[input_size * output_size];
+        second_momentum_weight_grads = new float[input_size * output_size];
+        first_momentum_bias_grads = new float[output_size];
+        second_momentum_bias_grads = new float[output_size];
         weights = new float[input_size * output_size];
         bias = new float[output_size];
         weight_grads = new float[input_size * output_size];
@@ -111,17 +124,38 @@ public class linearlayer{
         }
     }
     public void fit(float lr){
+        if (useAdam){
+            adam_t_step++;
+        }
         if (clip_type == clip_types.CLIP_NORM){
             clip_norm();
         }else if(clip_type == clip_types.CLIP_VAL){
             clip_val();
         }
         for (int x = 0; x < weights.length; x++){
-            weights[x] -= lr * weight_grads[x] / batch_counter;
+            weight_grads[x] /= batch_counter;
+            if (useAdam){
+                first_momentum_weight_grads[x] = (first_momentum_weight_grads[x] * adamFirstMomentumDecay) + (weight_grads[x] * (1.0f - adamFirstMomentumDecay));
+                second_momentum_weight_grads[x] = (second_momentum_weight_grads[x] * adamSecondMomentumDecay) + ((float)Math.pow(weight_grads[x], 2) * (1.0f - adamSecondMomentumDecay));
+                float m_b_hat = first_momentum_weight_grads[x] / (1.0f - (float)Math.pow(adamFirstMomentumDecay, adam_t_step));
+                float v_b_hat = second_momentum_weight_grads[x] / (1.0f - (float)Math.pow(adamSecondMomentumDecay, adam_t_step));
+                weights[x] -= lr * (m_b_hat / (Math.sqrt(v_b_hat) + epsilon));
+            }else{
+                weights[x] -= lr * weight_grads[x];
+            }
             weight_grads[x] = 0;
         }
         for (int x = 0; x < output_size; x++){
-            bias[x] -= lr * bias_grads[x] / batch_counter;
+            bias_grads[x] /= batch_counter;
+            if (useAdam){
+                first_momentum_bias_grads[x] = (first_momentum_bias_grads[x] * adamFirstMomentumDecay) + ((1.0f - adamFirstMomentumDecay) * bias_grads[x]);
+                second_momentum_bias_grads[x] = (second_momentum_bias_grads[x] * adamSecondMomentumDecay) + ((1.0f - adamSecondMomentumDecay) * (float)Math.pow(bias_grads[x], 2));
+                float m_b_hat = first_momentum_bias_grads[x] / (1.0f - (float)Math.pow(adamFirstMomentumDecay, adam_t_step));
+                float v_b_hat = second_momentum_bias_grads[x] / (1.0f - (float)Math.pow(adamSecondMomentumDecay, adam_t_step));
+                bias[x] -= lr * (m_b_hat / (Math.sqrt(v_b_hat) + epsilon));
+            }else{
+                bias[x] -= lr * bias_grads[x];
+            }
             bias_grads[x] = 0;
         }
         batch_counter = 0;
