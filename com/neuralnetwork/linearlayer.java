@@ -2,27 +2,22 @@ package com.neuralnetwork;
 
 import java.util.Random;
 
-enum clip_types{
-    CLIP_VAL,
-    CLIP_NORM,
-    NO_CLIP
-}
-
 public class linearlayer{
     public final float[] weights;
     public final float[] bias;
     private final float[] weight_grads;
     private final float[] bias_grads;
     private final float[] activation_grads; //despite what the name says, store preactivation vals
-    private float[] last_inputs;
+    public final float weight_grad_norm_clip = 1.0f;
+    public final float bias_grad_norm_clip = 1.0f;
+    public final float weight_clip_val = 1.0f;
+    public final float bias_clip_val = 1.0f;
     public final int input_size;
     public final int output_size;
+    private int batch_counter;
+    private float[] last_inputs;
     public activation act;
-    public float weight_grad_norm_clip = 1.0f;
-    public float bias_grad_norm_clip = 1.0f;
-    public float weight_clip_val = 1.0f;
-    public float bias_clip_val = 1.0f;
-    clip_types clip_type = clip_types.CLIP_NORM;
+    public clip_types clip_type = clip_types.CLIP_NORM;
     public void init(){
         double L;
         if (act instanceof relu){
@@ -36,6 +31,7 @@ public class linearlayer{
         }
     }
     linearlayer(int input_size, int output_size, activation act){
+        this.batch_counter = 0;
         this.act = act;
         this.input_size = input_size;
         this.output_size = output_size;
@@ -62,15 +58,16 @@ public class linearlayer{
         return outputs;
     }
     public float[] propagate(float[] errors){ // represents the errors after activation
+        batch_counter ++;
         float[] next_errors = new float[input_size];
         //find derivative of preactivation values
         for (int x = 0; x < output_size; x++){
             errors[x] *= activation_grads[x];
-            bias_grads[x] = errors[x];
+            bias_grads[x] += errors[x];
         }
         for (int x = 0; x < output_size; x++){
             for (int y = 0; y < input_size; y++){
-                weight_grads[x * input_size + y] = errors[x] * last_inputs[y];
+                weight_grads[x * input_size + y] += errors[x] * last_inputs[y];
                 next_errors[y] += errors[x] * weights[x * input_size + y];
             }
         }
@@ -120,12 +117,13 @@ public class linearlayer{
             clip_val();
         }
         for (int x = 0; x < weights.length; x++){
-            weights[x] -= lr * weight_grads[x];
+            weights[x] -= lr * weight_grads[x] / batch_counter;
             weight_grads[x] = 0;
         }
         for (int x = 0; x < output_size; x++){
-            bias[x] -= lr * bias_grads[x];
+            bias[x] -= lr * bias_grads[x] / batch_counter;
             bias_grads[x] = 0;
         }
+        batch_counter = 0;
     }
 }

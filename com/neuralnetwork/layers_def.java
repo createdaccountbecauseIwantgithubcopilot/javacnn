@@ -12,6 +12,7 @@ public class layers_def{
     }
     layers_def(layer_def[] layers){
         this.layers = layers;
+        this.length = layers.length;
     }
     public linearlayer[] create_layers(){
         linearlayer[] linearlayers = new linearlayer[length];
