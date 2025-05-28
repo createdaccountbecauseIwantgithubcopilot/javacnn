@@ -1,9 +1,9 @@
 package com.neuralnetwork;
 
+import java.awt.image.BufferedImage;
 import java.io.*;
 import java.util.*;
 import javax.imageio.ImageIO;
-import java.awt.image.BufferedImage;
 
 public class mnist {
     private static final String TRAIN_PATH = "mnist_png/train/";
@@ -177,7 +177,7 @@ public class mnist {
         CNNFFModel model = new CNNFFModel(cnn_model, ff_model, cnn_output_channels, cnn_output_height, cnn_output_width);
         
         float learning_rate = 0.001f;
-        int epochs = 3;
+        int epochs = 100;
         int batch_size = 32;
         
         mse loss_fn = new mse();
