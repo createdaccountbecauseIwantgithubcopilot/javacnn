@@ -178,7 +178,7 @@ public class mnist {
         
         float learning_rate = 0.001f;
         int epochs = 100;
-        int batch_size = 32;
+        int batch_size = 8;
         
         mse loss_fn = new mse();
         
