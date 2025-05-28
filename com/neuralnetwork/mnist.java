@@ -173,6 +173,8 @@ public class mnist {
         });
         
         ff ff_model = new ff(ff_layers);
+
+        //combined number of parameters: 433424
         
         System.out.println("FF model layers: " + ff_model.num_layers);
         for (int i = 0; i < ff_model.num_layers; i++) {
