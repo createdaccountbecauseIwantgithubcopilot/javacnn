@@ -1,2 +1,0 @@
-- Write no comments when writing code.
-- Always make smart optimizations when you can, even in detriment of readability or maintainability.
