@@ -179,8 +179,9 @@ public class mnist {
         float learning_rate = 0.001f;
         int epochs = 100;
         int batch_size = 8;
+        int save_every = 10;
         
-        mse loss_fn = new mse();
+        huber loss_fn = new huber();
         
         System.out.println("Starting training...");
         
@@ -232,6 +233,9 @@ public class mnist {
             System.out.println("Epoch " + (epoch + 1) + "/" + epochs + 
                 " - Loss: " + String.format("%.4f", avg_loss) + 
                 " - Train Accuracy: " + String.format("%.2f%%", train_acc));
+            if (epoch % save_every == 0){
+                model.save(String.format("mnist_cnn_epoch%d.model", epoch),String.format("mnist_ff_epoch%d.model", epoch));
+            }
         }
         
         System.out.println("\nEvaluating on test set...");
