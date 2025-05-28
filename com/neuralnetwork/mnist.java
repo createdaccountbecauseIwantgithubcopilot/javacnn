@@ -181,7 +181,7 @@ public class mnist {
         int batch_size = 8;
         int save_every = 10;
         
-        huber loss_fn = new huber();
+        loss loss_fn = new mse();
         
         System.out.println("Starting training...");
         
