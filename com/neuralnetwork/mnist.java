@@ -182,7 +182,7 @@ public class mnist {
         CNNFFModel model = new CNNFFModel(cnn_model, ff_model, cnn_output_channels, cnn_output_height, cnn_output_width);
         
         float learning_rate = 0.001f;
-        int epochs = 100;
+        int epochs = 4;
         int batch_size = 8;
         int save_every = 10;
         
