@@ -2,13 +2,18 @@ package com.neuralnetwork;
 
 public class huber extends loss{
 
+    public final float delta;
+
     huber(float delta){
       this.delta = delta;
     }
 
+    huber(){
+        this.delta = 1.0f;
+    }
+
     public float compute_loss(float[] predict, float[] ans){
         float sum = 0;
-        float delta = 1.0f;
         for (int x = 0; x < predict.length; x++){
             float error = predict[x] - ans[x];
             float absError = Math.abs(error);
@@ -23,7 +28,6 @@ public class huber extends loss{
 
     public float[] differentiate(float[] predict, float[] ans){
         float[] diff = new float[predict.length];
-        float delta = 1.0f;
         for (int x = 0; x < predict.length; x++){
             float error = predict[x] - ans[x];
             float absError = Math.abs(error);
