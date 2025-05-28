@@ -184,7 +184,7 @@ public class mnist {
         CNNFFModel model = new CNNFFModel(cnn_model, ff_model, cnn_output_channels, cnn_output_height, cnn_output_width);
         
         float learning_rate = 0.001f;
-        int epochs = 4;
+        int epochs = 10;
         int batch_size = 8;
         int save_every = 10;
         
@@ -240,7 +240,7 @@ public class mnist {
             System.out.println("Epoch " + (epoch + 1) + "/" + epochs + 
                 " - Loss: " + String.format("%.4f", avg_loss) + 
                 " - Train Accuracy: " + String.format("%.2f%%", train_acc));
-            if (epoch % save_every == 0){
+            if (epoch % save_every == 0 && epoch != 0){
                 model.save(String.format("mnist_cnn_epoch%d.model", epoch),String.format("mnist_ff_epoch%d.model", epoch));
             }
         }
