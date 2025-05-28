@@ -10,7 +10,7 @@ public class convolution {
     private float[][][] activation_grads;
     private float[][][] last_inputs;
     public final int num_filters;
-    private final int num_channels_in;
+    public final int num_channels_in;
     public final int kernel_size_h;
     public final int kernel_size_w;
     public final int stride;

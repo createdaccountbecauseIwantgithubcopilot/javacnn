@@ -156,6 +156,11 @@ public class mnist {
         int cnn_output_height = test_output[0].length;
         int cnn_output_width = test_output[0][0].length;
         System.out.println("CNN output shape: " + cnn_output_channels + "x" + cnn_output_height + "x" + cnn_output_width);
+        System.out.println("CNN model layers: " + cnn_model.num_layers);
+        System.out.println("Numfilters x NumChannelsIn x KernelH x KernelW");
+        for (int i = 0; i < cnn_model.num_layers; i++) {
+            System.out.println("CNN " + i + ": " + cnn_model.convolutions[i].num_filters + "x" + cnn_model.convolutions[i].num_channels_in + "x" + cnn_model.convolutions[i].kernel_size_h + "x" + cnn_model.convolutions[i].kernel_size_w + " stride: " + cnn_model.convolutions[i].stride);
+        }
         
         cnn_model = new cnn(new convolution[]{conv1, conv2, conv3});
         
